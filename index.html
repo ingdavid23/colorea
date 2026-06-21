@@ -70,16 +70,19 @@
       theme: {
         extend: {
           colors: {
-            bg: '#FDF1F4',       // Rosa pastel muy suave (fondo principal)
-            surface: '#FFFFFF',  // Blanco puro (Tarjetas, modales y tickets)
-            card: '#FCE4EC',     // Rosa pálido/grisáceo (Bordes, inputs y separadores)
-            accent: '#F98BAE',   // Rosa intenso (Del listón y corazones para botones principales)
-            accent2: '#D4C4E1',  // Morado pastel (De la taza para botones secundarios)
-            danger: '#FF6B6B',   // Rojo suave (Para eliminar/errores)
-            success: '#A3D2CA',  // Verde menta pastel (De las libretitas para dinero/stock)
-            warn: '#FADADD',     // Rosa cálido/durazno (Alertas)
-            txt: '#2A2A2A',      // Gris casi negro (Texto general, como la tipografía del logo)
-            muted: '#8A8A8A'     // Gris medio (Texto secundario)
+            bg: '#FDF1F4',       // Rosa pastel muy suave (Fondo principal)
+            surface: '#FFFFFF',  // Blanco puro (Tarjetas)
+            card: '#FCE4EC',     // Rosa pálido (Bordes e inputs)
+            
+            /* === COLORES CON CONTRASTE MEJORADO === */
+            accent: '#D95A7E',   // Rosa intenso más profundo (Sustituye al F98BAE claro)
+            accent2: '#A58BCC',  // Lila más sólido
+            danger: '#E64D4D',   // Rojo suave pero legible
+            success: '#59A596',  // Verde menta convertido a un "Teal" oscuro para lectura
+            warn: '#DF7B8C',     // Rosa coral profundo (Sustituye al pastel pálido de Granel/Alertas)
+            
+            txt: '#2A2A2A',      // Gris casi negro (Texto general)
+            muted: '#7A7A7A'     // Gris medio un poco más oscurecido
           }
         }
       }
