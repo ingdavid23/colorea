@@ -1,5 +1,4 @@
 
-
 <!doctype html>
 <html lang="es" class="h-full">
  <head>
@@ -1879,50 +1878,53 @@ function renderInventory(container) {
   let editingCategoryOldName = '';
 
   function renderList() {
-    const currentClients = records('client');
-    const filtered = currentClients.filter(c => 
+    const currentProducts = records('product');
+    const filtered = currentProducts.filter(p => 
       !searchTerm || 
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (c.phone || '').includes(searchTerm)
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (p.code || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const list = document.getElementById('client-list');
+    const list = document.getElementById('inv-list');
     if (!list) return;
 
-    list.innerHTML = filtered.length ? filtered.map(c => {
-      // === MAGIA: CALCULAMOS LA DEUDA DEL CLIENTE AL VUELO ===
-      const cliSales = records('sale').filter(s => s.client_id === c.id);
-      const deuda = cliSales.reduce((sum, s) => sum + (s.debt || 0), 0);
-      // =======================================================
-
-      return `
+    list.innerHTML = filtered.length ? filtered.map(p => `
       <tr class="border-b border-card/50 hover:bg-card/30 transition">
-        <td class="p-3 font-medium">
-          <button type="button" onclick="window.viewClientHistory('${c.id}')" class="text-accent hover:underline font-bold text-left flex items-center gap-1" title="Ver compras del mes">
-            <i data-lucide="shopping-cart" class="w-4 h-4 pointer-events-none"></i> ${c.name}
-          </button>
-        </td>
-        <td class="p-3 text-muted font-mono">${c.phone || '-'}</td>
-        <td class="p-3 text-muted truncate max-w-xs" title="${c.address || ''}">${c.address || '-'}</td>
+        <td class="p-3 text-muted font-mono text-xs">${p.code || '-'}</td>
+        <td class="p-3 font-medium">${p.name}</td>
+        <td class="p-3"><span class="text-[10px] bg-card border border-surface px-2 py-1 rounded">${p.category || 'General'}</span></td>
+        <td class="p-3 text-muted">${currency(p.buy_price)}</td>
+        <td class="p-3 font-bold text-success">${currency(p.sell_price)}</td>
+        <td class="p-3 font-bold ${p.stock <= (p.min_stock || 5) ? 'text-warn' : 'text-txt'}">${p.is_service ? 'Servicio' : (p.is_clothing ? 'Varias Tallas' : p.stock)}</td>
         <td class="p-3 print:hidden">
-          <div class="flex gap-2 justify-end">
+          <div class="flex gap-2 justify-start items-center">
             
-           ${c.phone ? `
-            <button type="button" onclick="window.sendWaReminder('${c.phone}', '${c.name}', ${deuda})" class="flex items-center gap-1.5 bg-success/10 border border-success/20 text-success px-3 py-1.5 rounded-lg hover:bg-success hover:text-white transition font-semibold text-xs shadow-sm" title="Contactar por WhatsApp">
-              <i data-lucide="message-circle" class="w-3.5 h-3.5 pointer-events-none"></i> ${deuda > 0 ? 'Cobrar' : 'WhatsApp'}
+            ${!p.is_service && !p.is_clothing ? `
+            <button type="button" onclick="window.openStockModal('${p.id}', 'in')" class="flex items-center justify-center bg-success/10 border border-success/20 text-success w-8 h-8 rounded-lg hover:bg-success hover:text-white transition shadow-sm" title="Entrada de Stock">
+              <i data-lucide="plus" class="w-4 h-4 pointer-events-none"></i>
+            </button>
+            <button type="button" onclick="window.openStockModal('${p.id}', 'out')" class="flex items-center justify-center bg-danger/10 border border-danger/20 text-danger w-8 h-8 rounded-lg hover:bg-danger hover:text-white transition shadow-sm" title="Salida de Stock">
+              <i data-lucide="minus" class="w-4 h-4 pointer-events-none"></i>
             </button>
             ` : ''}
-
-            <button type="button" onclick="window.editClient('${c.id}')" class="flex items-center gap-1.5 bg-accent/10 border border-accent/20 text-accent px-3 py-1.5 rounded-lg hover:bg-accent hover:text-bg transition font-semibold text-xs shadow-sm">
+            
+            <button type="button" onclick="window.printBarcode('${p.id}')" class="flex items-center justify-center bg-success/10 border border-success/20 text-success w-8 h-8 rounded-lg hover:bg-success hover:text-white transition shadow-sm" title="Imprimir Etiqueta">
+              <i data-lucide="printer" class="w-4 h-4 pointer-events-none"></i>
+            </button>
+            
+            <button type="button" onclick="window.editProduct('${p.id}')" class="flex items-center gap-1.5 bg-accent/10 border border-accent/20 text-accent px-3 py-1.5 rounded-lg hover:bg-accent hover:text-bg transition font-semibold text-xs shadow-sm">
               <i data-lucide="edit" class="w-3.5 h-3.5 pointer-events-none"></i> Editar
             </button>
-            <button type="button" onclick="window.deleteClient('${c.id}')" class="flex items-center justify-center bg-danger/10 border border-danger/20 text-danger w-8 h-8 rounded-lg hover:bg-danger hover:text-white transition shadow-sm">
+            
+            <button type="button" onclick="window.deleteProduct('${p.id}')" class="flex items-center justify-center bg-danger/10 border border-danger/20 text-danger w-8 h-8 rounded-lg hover:bg-danger hover:text-white transition shadow-sm" title="Eliminar">
               <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
             </button>
+            
           </div>
         </td>
-      </tr>`;
-    }).join('') : '<tr><td colspan="4" class="py-8 text-center text-muted">No hay clientes registrados en la cartera.</td></tr>';
+      </tr>
+    `).join('') : '<tr><td colspan="7" class="py-8 text-center text-muted">No se encontraron productos en el inventario.</td></tr>';
+    
     lucide.createIcons();
   }
 
