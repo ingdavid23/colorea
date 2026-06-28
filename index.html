@@ -5776,10 +5776,16 @@ function renderCashierClose() {
           <label class="block text-sm text-muted mb-1">Efectivo en caja REAL (billetes y monedas):</label>
           <input id="real-cash" type="number" step="0.01" class="w-full bg-bg border border-card rounded-lg px-4 py-3 text-center text-xl font-bold focus:border-accent focus:outline-none" value="${expectedCash.toFixed(2)}">
         </div>
-        <div id="diff-display" class="text-center text-sm font-semibold"></div>
-        <button id="close-register" class="w-full bg-warn text-bg font-bold py-3 rounded-lg hover:opacity-90 transition flex justify-center items-center gap-2 mt-4 shadow-lg">
-          <i data-lucide="lock" class="w-5 h-5"></i> Cerrar y Enviar WhatsApp
-        </button>
+       <div id="diff-display" class="text-center text-sm font-semibold"></div>
+        
+        <div class="flex gap-3 mt-4">
+          <button id="print-close" class="flex-1 bg-success/10 text-success font-bold py-3 rounded-lg hover:bg-success/20 transition flex justify-center items-center gap-2 shadow-sm border border-success/20" title="Imprimir ticket del corte actual">
+            <i data-lucide="printer" class="w-5 h-5"></i> Imprimir
+          </button>
+          <button id="close-register" class="flex-[2] bg-warn text-bg font-bold py-3 rounded-lg hover:opacity-90 transition flex justify-center items-center gap-2 shadow-lg">
+            <i data-lucide="lock" class="w-5 h-5"></i> Cerrar Caja
+          </button>
+        </div>
       </div>
     </div>`;
 
@@ -5794,6 +5800,79 @@ function renderCashierClose() {
     }
     realInput.oninput = updateDiff;
     updateDiff();
+
+
+    // --- NUEVO: LÓGICA PARA IMPRIMIR EL CORTE DE CAJA ---
+    document.getElementById('print-close').onclick = () => {
+       const realCash = parseFloat(realInput.value) || 0;
+       const diff = realCash - expectedCash;
+       const currentSessionStart = sessionStart; 
+       const userToClean = currentUser.username;
+
+       const sysLogo = getSystemLogo();
+       const logoPrintHtml = sysLogo ? `<img src="${sysLogo}" style="max-width: 140px; max-height: 80px; margin: 0 auto 10px auto; display: block; object-fit: contain;">` : '';
+       const dateTime = new Date().toLocaleString('es-MX', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+       const openTime = new Date(currentSessionStart || now()).toLocaleString('es-MX', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true });
+
+       const ticketHtml = `
+         <div class="text-center mb-3 text-black">
+          ${logoPrintHtml}
+          <div class="text-2xl font-bold tracking-tight uppercase">${bizName()}</div>
+          <div class="text-xs mt-1">
+           <div class="font-bold">CORTE DE CAJA</div>
+           <div class="font-bold mt-1">Cajero: ${userToClean}</div>
+           <div>Apertura: ${openTime}</div>
+           <div>Impresión: ${dateTime}</div>
+          </div>
+         </div>
+         <div class="w-full border-t-2 border-dashed border-gray-400 mt-2 mb-2"></div>
+         
+         <div class="w-full text-xs space-y-1 text-black">
+           <div class="flex justify-between"><span>Fondo Inicial:</span><span>${currency(initialCash)}</span></div>
+           <div class="flex justify-between"><span>Ventas Efectivo:</span><span>${currency(cashSales)}</span></div>
+           <div class="flex justify-between"><span>Ventas Transfer.:</span><span>${currency(transferSales)}</span></div>
+           <div class="flex justify-between"><span>Abonos/Entradas:</span><span>${currency(totalCashIn)}</span></div>
+           <div class="flex justify-between"><span>Gastos/Salidas:</span><span>${currency(totalCashOut)}</span></div>
+         </div>
+         
+         <div class="w-full border-t-2 border-dashed border-gray-400 mt-2 mb-2"></div>
+         
+         <div class="w-full text-sm space-y-1 text-black">
+           <div class="flex justify-between font-bold"><span>Total Ventas:</span><span>${currency(salesTotal)}</span></div>
+         </div>
+         
+         <div class="w-full border-t border-solid border-gray-300 mt-2 mb-2"></div>
+         
+         <div class="w-full text-xs space-y-1 text-black">
+           <div class="flex justify-between font-bold"><span>EFECTIVO ESPERADO:</span><span>${currency(expectedCash)}</span></div>
+           <div class="flex justify-between font-bold"><span>EFECTIVO REAL:</span><span>${currency(realCash)}</span></div>
+           <div class="flex justify-between font-bold mt-1"><span>DIFERENCIA:</span><span>${currency(diff)}</span></div>
+         </div>
+         
+         <div class="w-full border-t-2 border-dashed border-gray-400 mt-3 mb-2"></div>
+         <div class="text-center text-[10px] mt-2 text-gray-500">Documento de control interno</div>
+       `;
+
+       document.getElementById('printable-ticket').innerHTML = ticketHtml;
+       
+       // Ocultar botón de WhatsApp ya que es un ticket interno
+       const btnWa = document.getElementById('btn-wa-ticket');
+       if(btnWa) btnWa.style.display = 'none';
+       const waContainer = document.getElementById('wa-input-container');
+       if(waContainer) waContainer.style.display = 'none';
+       
+       document.getElementById('btn-print-ticket').classList.add('col-span-2');
+
+       // Mostrar el modal de impresión
+       document.getElementById('receipt-modal').classList.remove('hidden');
+       document.getElementById('receipt-modal').classList.add('flex');
+       
+       document.getElementById('receipt-close').onclick = () => {
+         document.getElementById('receipt-modal').classList.remove('flex');
+         document.getElementById('receipt-modal').classList.add('hidden');
+       };
+    };
+    // --------------------------------------------------------
 
     document.getElementById('close-register').onclick = async () => {
       const btn = document.getElementById('close-register');
@@ -5871,6 +5950,8 @@ function renderCashierClose() {
 
   renderTabContent();
 }
+
+
 // ========== ESCUCHA MULTICAJA EN TIEMPO REAL (OPTIMIZADA) ==========
   
 const coleccionesCatalogos = ['productos', 'usuarios', 'categorias', 'configuracion', 'archivos_sistema', 'insumos_granel', 'clientes', 'notas'];
