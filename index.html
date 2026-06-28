@@ -831,9 +831,10 @@ window.openStockModal = (id, type) => {
   if(!prod) return;
   activeStockAction = { id, type, prod };
   
-  document.getElementById('stock-prod-name').textContent = prod.name;
-  document.getElementById('stock-qty').value = '';
-  document.getElementById('stock-reason').value = '';
+  document.getElementById('prod-name').value = editingProduct.name;
+      document.getElementById('prod-code').value = editingProduct.code || '';
+      document.getElementById('prod-provider').value = editingProduct.provider || ''; // <--- NUEVA LÍNEA
+      document.getElementById('prod-cat').value = editingProduct.category || '';
   
   // LÓGICA DE TALLAS
   const sizeContainer = document.getElementById('stock-size-container');
@@ -1882,7 +1883,8 @@ function renderInventory(container) {
     const filtered = currentProducts.filter(p => 
       !searchTerm || 
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (p.code || '').toLowerCase().includes(searchTerm.toLowerCase())
+      (p.code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.provider || '').toLowerCase().includes(searchTerm.toLowerCase()) // Ahora también busca por proveedor
     );
 
     const list = document.getElementById('inv-list');
@@ -1892,6 +1894,10 @@ function renderInventory(container) {
       <tr class="border-b border-card/50 hover:bg-card/30 transition">
         <td class="p-3 text-muted font-mono text-xs">${p.code || '-'}</td>
         <td class="p-3 font-medium">${p.name}</td>
+        
+        <!-- NUEVA CELDA DE PROVEEDOR -->
+        <td class="p-3 text-muted text-xs truncate max-w-[120px]" title="${p.provider || ''}">${p.provider || '-'}</td>
+        
         <td class="p-3"><span class="text-[10px] bg-card border border-surface px-2 py-1 rounded">${p.category || 'General'}</span></td>
         <td class="p-3 text-muted">${currency(p.buy_price)}</td>
         <td class="p-3 font-bold text-success">${currency(p.sell_price)}</td>
@@ -1923,7 +1929,7 @@ function renderInventory(container) {
           </div>
         </td>
       </tr>
-    `).join('') : '<tr><td colspan="7" class="py-8 text-center text-muted">No se encontraron productos en el inventario.</td></tr>';
+    `).join('') : '<tr><td colspan="8" class="py-8 text-center text-muted">No se encontraron productos en el inventario.</td></tr>';
     
     lucide.createIcons();
   }
@@ -1959,7 +1965,14 @@ function renderInventory(container) {
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h2 class="text-xl font-bold">Inventario</h2>
       <div class="flex gap-2 items-center">
-        <button id="export-excel" class="bg-success/10 border border-success/20 text-success px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-success/20 transition"><i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel</button>
+        <button id="export-excel" class="bg-success/10 border border-success/20 text-success px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-success/20 transition" title="Exportar todo el inventario">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel
+        </button>
+        
+        <button id="export-excel-low" class="bg-warn/10 border border-warn/20 text-warn px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-warn/20 transition" title="Exportar solo productos con bajo stock">
+          <i data-lucide="alert-triangle" class="w-4 h-4"></i> Faltantes
+        </button>
+
         <div class="relative ml-2">
           <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted"></i>
           <input id="inv-search" class="bg-card border border-card rounded-lg pl-9 pr-4 py-2 text-sm focus:border-accent focus:outline-none w-48" placeholder="Buscar...">
@@ -2007,9 +2020,15 @@ function renderInventory(container) {
             <label class="text-xs text-muted">Código</label>
             <input id="prod-code" class="bg-card border border-card rounded-lg px-3 py-2 text-sm focus:border-accent focus:outline-none" placeholder="Escanear...">
           </div>
-          <div class="flex flex-col gap-1 sm:col-span-2 md:col-span-2">
+         <div class="flex flex-col gap-1 sm:col-span-2 md:col-span-1">
             <label class="text-xs text-muted">Nombre *</label>
             <input id="prod-name" class="bg-card border border-card rounded-lg px-3 py-2 text-sm focus:border-accent focus:outline-none" placeholder="Nombre del producto" required>
+          </div>
+
+          <!-- NUEVO CAMPO DE PROVEEDOR -->
+          <div class="flex flex-col gap-1 sm:col-span-1 md:col-span-1">
+            <label class="text-xs text-muted">Proveedor</label>
+            <input id="prod-provider" class="bg-card border border-card rounded-lg px-3 py-2 text-sm focus:border-accent focus:outline-none" placeholder="Ej: BIC, Scribe...">
           </div>
           
           <div class="flex flex-col gap-1 sm:col-span-1 md:col-span-1">
@@ -2082,7 +2101,7 @@ function renderInventory(container) {
 
     <div class="bg-surface rounded-xl border border-card overflow-x-auto p-1 shadow-sm mt-4">
       <table class="w-full text-sm">
-        <thead><tr class="text-muted text-left border-b border-card"><th class="p-3">Código</th><th class="p-3">Nombre</th><th class="p-3">Categoría</th><th class="p-3">P.Compra</th><th class="p-3">P.Venta</th><th class="p-3">Stock</th><th class="p-3 print:hidden">Acciones</th></tr></thead>
+        <thead><tr class="text-muted text-left border-b border-card"><th class="p-3">Código</th><th class="p-3">Nombre</th><th class="p-3">Proveedor</th><th class="p-3">Categoría</th><th class="p-3">P.Compra</th><th class="p-3">P.Venta</th><th class="p-3">Stock</th><th class="p-3 print:hidden">Acciones</th></tr></thead>
         <tbody id="inv-list"></tbody>
       </table>
     </div>
@@ -2294,6 +2313,7 @@ function renderInventory(container) {
       type: 'product',
       name: newName,
       code: document.getElementById('prod-code').value.trim() || genId().slice(0,8).toUpperCase(),
+      provider: document.getElementById('prod-provider').value.trim(), // <--- NUEVA LÍNEA
       category: document.getElementById('prod-cat').value,
       buy_price: parseFloat(document.getElementById('prod-buy').value) || 0,
       sell_price: parseFloat(document.getElementById('prod-sell').value),
@@ -2322,16 +2342,47 @@ function renderInventory(container) {
     renderInventory(container);
   };
 
-  document.getElementById('export-excel').onclick = () => {
+ // Lógica del botón Excel General
+ document.getElementById('export-excel').onclick = () => {
     if(!products.length) return showToast('No hay datos', 'warn');
+    
     const data = products.map(p => ({
-      'Código': p.code || 'N/A', 'Producto': p.name, 'Categoría': p.category || 'General',
-      'P. Venta': p.sell_price, 'Stock': p.stock
+      'Código': p.code || 'N/A', 
+      'Producto': p.name, 
+      'Proveedor': p.provider || '-',
+      'Categoría': p.category || 'General',
+      'P. Compra': p.buy_price || 0,
+      'P. Venta': p.sell_price, 
+      'Stock': p.stock
     }));
+    
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Inventario");
     XLSX.writeFile(wb, `Inventario_${bizName()}_${today()}.xlsx`);
+  };
+
+  // --- NUEVA LÓGICA: EXCEL SOLO DE BAJO STOCK ---
+  document.getElementById('export-excel-low').onclick = () => {
+    // Filtramos usando la misma regla visual del sistema (menor o igual al mínimo, por defecto 5)
+    const lowStockProducts = products.filter(p => !p.is_service && p.stock <= (p.min_stock || 5));
+    
+    if(!lowStockProducts.length) return showToast('¡Todo bien! No hay productos con bajo stock', 'success');
+    
+    const data = lowStockProducts.map(p => ({
+      'Código': p.code || 'N/A', 
+      'Producto': p.name, 
+      'Proveedor': p.provider || '-',
+      'Categoría': p.category || 'General',
+      'P. Compra': p.buy_price || 0,
+      'Stock Actual': p.stock,
+      'Stock Mínimo Sugerido': p.min_stock || 5
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Faltantes");
+    XLSX.writeFile(wb, `Reporte_Faltantes_${bizName()}_${today()}.xlsx`);
   };
 
   document.getElementById('inv-search').oninput = (e) => { searchTerm = e.target.value; renderList(); };
